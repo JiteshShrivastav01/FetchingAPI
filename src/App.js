@@ -28,6 +28,32 @@ function App() {
   //     })
   //   }
 
+
+  // async function addMovieHandler(movie) {
+  //   const response= await fetch('https://first-project-f473f-default-rtdb.firebaseio.com/movies.json',{
+  //     method : 'POST' ,
+  //     body : JSON.stringify(movie),
+  //     headers : {
+  //       'content-type' : 'application/json'
+  //     }
+  //   })
+  //   const data=response.json()
+  //   console.log(data)
+  // }
+
+
+  // const DeleteHandler=(id)=>{
+  //   console.log(id)
+  //   const response= fetch('https://first-project-f473f-default-rtdb.firebaseio.com/movies/id.json',{
+  //     method:'DELETE'
+  //   })
+  //   console.log(response)
+  //   setMovies((prevMovie)=>
+  //     prevMovie.filter((movies)=>movies.id!== id)
+  //   )
+  // }
+
+
     const fetchMoviesHandler = useCallback(async () => {
       setIsLoading(true)
       setError(null)
@@ -40,7 +66,6 @@ function App() {
 
       const data = await response.json();
  
-      console.log(data)
       const loadedMovies=[]
 
       for(const key in data){
@@ -51,8 +76,6 @@ function App() {
           releaseDate : data[key].releaseDate
          })
       }
-       
-      console.log(loadedMovies)
 
       setMovies(loadedMovies);
 
@@ -70,18 +93,44 @@ function App() {
   }, [retryCount]);
   
 
-  async function addMovieHandler(movie) {
-    const response= await fetch('https://first-project-f473f-default-rtdb.firebaseio.com/movies.json',{
-      method : 'POST' ,
-      body : JSON.stringify(movie),
-      headers : {
-        'content-type' : 'application/json'
-      }
-    })
-    const data=response.json()
-    console.log(data)
-  }
+  
 
+  async function addMovieHandler(movie) {
+    try {
+      const response = await fetch('https://first-project-f473f-default-rtdb.firebaseio.com/movies.json', {
+        method: 'POST',
+        body: JSON.stringify(movie),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error('Error occurred while adding a movie:', error);
+    }
+  }
+  
+  const DeleteHandler = async (id) => {
+    console.log(id);
+    
+    try {
+      const response = await fetch(`https://first-project-f473f-default-rtdb.firebaseio.com/movies/${id}.json`, {
+        method: 'DELETE'
+      });
+    
+      if (response.ok) {
+        console.log('Movie deleted successfully.');
+        setMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== id));
+      } else {
+        console.log('Failed to delete movie.');
+      }
+    } catch (error) {
+      console.error('Error occurred while deleting movie:', error);
+    }
+  };
+  
   
 
   useEffect(()=>{
@@ -92,13 +141,15 @@ function App() {
     clearTimeout(retryTimer);
     setRetryCount(0);
   };
+  
+
 
   let content=<p>No Movies Found</p>
   if(isLoading){
     content=<p>Loading ...</p>
   }
   if(!isLoading && movies.length>0 && !error ){
-    content=<MoviesList movies={movies}/>
+    content=<MoviesList movies={movies} onDelete={DeleteHandler}/>
   }
   if(!isLoading && error){
     content=<div>
